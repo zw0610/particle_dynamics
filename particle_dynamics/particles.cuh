@@ -1,7 +1,7 @@
 #include "xyzread.hpp"
 #include "delaunay_triangulation.hpp"
 #include "kernel_functions.cuh"
-
+#include "kernel_functions.cuh"
 
 #include <cublas_v2.h>
 
@@ -207,6 +207,18 @@ namespace solid {
         Dissolve<<<num_valid_cells, 6>>>(   thrust::raw_pointer_cast( dev_vec_teh.data() ) ,
                                             thrust::raw_pointer_cast( dev_vec_edg.data() ) );
 
+        std::cout << "delaunay" << std::endl;
+        for (size_t i = 0; i<hos_teh_list.size(); i++) {
+            std::cout << hos_teh_list[i] << " ";
+            if ( i%4==0 ) { std::cout << std::endl; }
+        }
+/*
+        std::cout << "edges" << std::endl;
+        for (size_t i = 0; i<dev_vec_edg.size(); i++) {
+            uint2 item = dev_vec_edg[i];
+            std::cout << item.x << " " << item.y << std::endl;
+        }
+*/
         //Sort with uint2
         compare_uint2 comp;
         thrust::sort( dev_vec_edg.begin(), dev_vec_edg.end(), comp);
