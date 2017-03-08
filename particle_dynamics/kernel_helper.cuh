@@ -1,9 +1,9 @@
 #ifndef kernel_helper_cuh
-#define kernel_functions_cuh
+#define kernel_helper_cuh
 
 #include <iostream>
 
-template<typename T>
+template<class T>
 void print_dev_array(T * list, size_t length, size_t num_col) {
 
     T * ha = new T[length];

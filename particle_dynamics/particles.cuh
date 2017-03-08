@@ -1,7 +1,7 @@
 #include "xyzread.hpp"
 #include "delaunay_triangulation.hpp"
 #include "kernel_functions.cuh"
-#include "kernel_functions.cuh"
+#include "kernel_helper.cuh"
 
 #include <cublas_v2.h>
 
@@ -184,7 +184,7 @@ namespace solid {
             }
         }
     }
-
+    // delaunay member function is all checked
     void particles::delaunay(void) {
 
         synchronize();
@@ -206,18 +206,17 @@ namespace solid {
 
         Dissolve<<<num_valid_cells, 6>>>(   thrust::raw_pointer_cast( dev_vec_teh.data() ) ,
                                             thrust::raw_pointer_cast( dev_vec_edg.data() ) );
-
+/*
+        std::cout << " num_valid_cells = " << num_valid_cells << std::endl;
+        std::cout << " hos_teh_list.size() = " << hos_teh_list.size() << std::endl;
+        std::cout << " dev_vec_teh.size() = " << dev_vec_teh.size() << std::endl;
+        std::cout << " dev_vec_edg.size) = " << dev_vec_edg.size() << std::endl;
         std::cout << "delaunay" << std::endl;
         for (size_t i = 0; i<hos_teh_list.size(); i++) {
             std::cout << hos_teh_list[i] << " ";
             if ( i%4==0 ) { std::cout << std::endl; }
         }
-/*
-        std::cout << "edges" << std::endl;
-        for (size_t i = 0; i<dev_vec_edg.size(); i++) {
-            uint2 item = dev_vec_edg[i];
-            std::cout << item.x << " " << item.y << std::endl;
-        }
+        std::cout << std::endl;
 */
         //Sort with uint2
         compare_uint2 comp;
@@ -226,7 +225,13 @@ namespace solid {
         equal_uint2 uiequal;
 	    auto new_end = thrust::unique(thrust::device, dev_vec_edg.begin(), dev_vec_edg.end(), uiequal);
         num_edges = std::distance( dev_vec_edg.begin(), new_end);
-
+/*
+        std::cout << "cleaned edges" << std::endl;
+        for (size_t i = 0; i<num_edges; i++) {
+            uint2 item = dev_vec_edg[i];
+            std::cout << i << " " << item.x << " " << item.y << std::endl;
+        }
+*/
         //Store the data into member varialb uint2 dev_edges
         cudaFree(dev_edges);
         cudaMalloc( (void**)&dev_edges, sizeof(uint2) * num_edges);
@@ -235,6 +240,8 @@ namespace solid {
         //Determin the start index and end index in dev_edges for each point.
         cudaMemcpy(head_and_tail, empty_list, num_points*sizeof(unsigned int), cudaMemcpyHostToDevice);
         LookLeft<<<(num_edges>>10)+1, 1024>>>(dev_edges, head_and_tail, num_edges);
+        //std::cout << "Head and Tail" << std::endl;
+        //print_dev_array<unsigned int>(head_and_tail, num_points, 1);
 	}
 
 	void particles::evolve(float dt) {
